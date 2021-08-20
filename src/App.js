@@ -5,14 +5,13 @@ import WelcomeDash from './components/WelcomeDash';
 
 function App() {
   return (
-    <div >
+    <div className="App">
       <Router>
         <Switch>
           <Route exact path='/' component={WelcomeDash} />
           <Route exact path='/login' component={Login} />
         </Switch>
       </Router>
-        <p>Hello react</p>
     </div>
   );
 }
