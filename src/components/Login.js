@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, createRef } from 'react'
 import PropsType from 'prop-types'
 import {Form, Button, InputGroup, FormControl, Container, Row, Col} from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -14,14 +14,17 @@ import { Link } from 'react-router-dom'
 export default class Login extends Component {
     constructor(){
         super();
+        this.cardHeightAutoRef = createRef()
         this.state={
             hide:true,
             isEyeVisible:false,
+            isLoading:false,
             email:null,
             password:null,
             emailError:null,
             passwordError:null,
-            userData:null
+            userData:null,
+            backendErrorResponse:null,
         }
     }
     handlePasswordVisibility(){
@@ -32,10 +35,13 @@ export default class Login extends Component {
     
     validateEmail(email){
         // let isValid=false
+        this.setState({
+            backendErrorResponse:null
+        })
         console.log("email validate")
         if (!email) {
             // isValid = false;
-            this.setState({ emailError:"Please enter your email Address."})
+            this.setState({ emailError:"Please enter your email address."})
             return false
         }
         
@@ -62,6 +68,9 @@ export default class Login extends Component {
     
     validatePassword(password){
         console.log("password validate")
+        this.setState({
+            backendErrorResponse:null
+        })
         if (!password) {
             // isValid = false;
             this.setState({ 
@@ -71,15 +80,15 @@ export default class Login extends Component {
         }
         
         if (password !== null) {
-            var pattern = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})");
-            if (!pattern.test(password)) {
-                //   isValid = false;
-                this.setState({
-                    passwordError:"Please enter valid password.",
-                    password:null
-                })
-                return false
-            }
+            // var pattern = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})");
+            // if (!pattern.test(password)) {
+            //     //   isValid = false;
+            //     this.setState({
+            //         passwordError:"Please enter valid password.",
+            //         password:null
+            //     })
+            //     return false
+            // }
         }
         this.setState({
             passwordError:null,
@@ -88,16 +97,23 @@ export default class Login extends Component {
         return true
     }
     
-    handleSubmit(e){
+      handleSubmit(e){
         // e.preventDefault();
         let email=this.validateEmail(this.state.email)
         let password=this.validatePassword(this.state.password)
+        console.log(email);
+    console.log(password);
         if(email && password){
-            axios.post(`https://insulink-backend.herokuapp.com/api/v1/auth/admin/login`, {
+            this.setState({isLoading:true})
+             axios.post(`https://insulink-backend.herokuapp.com/api/v1/auth/admin/login`, {
             email: this.state.email,
             password:this.state.password
         })
         .then(res => {
+            this.setState({
+                backendErrorResponse:null,
+                isLoading:false
+            })
             const datas = res.data
             console.log(datas.data.user.token)
             cookie.save('token', datas.data.user.token, { path: '/' })
@@ -108,17 +124,27 @@ export default class Login extends Component {
             this.props.history.push('/')
             console.log(this.props.history.location)
         })
-        .catch(error => console.log(error));
+        .catch(error => this.setState({
+            backendErrorResponse:error.response.data.data.err.msg,
+            isLoading:false}));
     
     
-}
-e.preventDefault();
-console.log("handle submit clicked")
-console.log(email);
-console.log(password);
-console.log(this.state.email);
-console.log(this.state.password)
-console.log(this.state.passwordError)
+    }
+    e.preventDefault();
+
+    // if (this.state.emailError || this.state.passwordError || this.state.backendErrorResponse) {
+    //     this.ref.cardHeightAutoRef.style.height='auto'
+    // } 
+
+    console.log("handle submit clicked")
+    console.log(email);
+    console.log(password);
+    // console.log(this.state.email);
+    // console.log(this.state.password)
+    console.log(this.state.passwordError)
+    console.log(this.state.backendErrorResponse)
+    console.log(this.state.userData)
+    
 
 
 }
@@ -129,9 +155,11 @@ render() {
     // console.log(this.state.email)
     // console.log(this.state.password)
     console.log(this.props.history.location)
+    console.log(this.state.backendErrorResponse)
     console.log(this.state.userData)
+    
     return (
-        <div className="login-card">
+        <div className="login-card" ref='cardHeightAutoRef'>
         <div className="login-form">
         
         <h2>Login to Insulin</h2>
@@ -169,6 +197,9 @@ render() {
         {
             this.state.passwordError !=null ? <small style={{color:'red'}}>{this.state.passwordError}</small> :''
         }
+        {
+            this.state.backendErrorResponse !=null ? <small style={{color:'red'}}>{this.state.backendErrorResponse}</small> :''
+        }
         </div>
         {/* <div class="mb-3 form-check"> */}
         <Row style={{width:'100%', marginBottom:'10%'}}>
@@ -185,7 +216,9 @@ render() {
         style={{background:'#3E64E2', color:'#fff', borderRadius:'20px', font:"normal normal 600 23px/34px Poppins;"}} 
         className="btn col login-button"
         onClick={(e)=>this.handleSubmit(e)}
-        >Login</button>
+        >{
+            this.state.isLoading ? 'Verifying...': 'Login'
+        }</button>
         </form>
         
         <Row style={{marginTop:'10%'}}>
