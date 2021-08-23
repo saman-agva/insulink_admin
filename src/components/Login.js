@@ -19,6 +19,7 @@ export default class Login extends Component {
             hide:true,
             isEyeVisible:false,
             isLoading:false,
+            rememberMe:false,
             email:null,
             password:null,
             emailError:null,
@@ -27,6 +28,7 @@ export default class Login extends Component {
             backendErrorResponse:null,
         }
     }
+
     handlePasswordVisibility(){
         this.setState({
             hide:!this.state.hide
@@ -96,13 +98,22 @@ export default class Login extends Component {
         })
         return true
     }
+
+    rememberMe(){
+        localStorage.setItem('rememberMe', 'Shaktish');
+        localStorage.setItem('adminUserName', this.state.rememberMe ? this.state.email  : '');
+        localStorage.setItem('adminUserCredential', this.state.rememberMe ? this.state.password : '');
+        let adminuser = localStorage.getItem('adminUser')
+        window.alert(adminuser)
+    }
     
       handleSubmit(e){
         // e.preventDefault();
+        this.rememberMe()
         let email=this.validateEmail(this.state.email)
         let password=this.validatePassword(this.state.password)
         console.log(email);
-    console.log(password);
+        console.log(password);
         if(email && password){
             this.setState({isLoading:true})
              axios.post(`https://insulink-backend.herokuapp.com/api/v1/auth/admin/login`, {
@@ -149,14 +160,22 @@ export default class Login extends Component {
 
 }
 
+componentDidMount(){
+    if(localStorage.getItem('adminUserName') && localStorage.getItem('adminUserCredential')){
+
+        this.setState({
+            email:localStorage.getItem('adminUserName'),
+            password:localStorage.getItem('adminUserCredential')
+        })
+    }
+}
+
 render() {
-    // console.log(this.state.emailError)
-    // console.log(this.state.passwordError)
-    // console.log(this.state.email)
-    // console.log(this.state.password)
     console.log(this.props.history.location)
     console.log(this.state.backendErrorResponse)
     console.log(this.state.userData)
+    
+    
     
     return (
         <div className="login-card" ref='cardHeightAutoRef'>
@@ -187,6 +206,7 @@ render() {
         style={{
             margin: '8px 0',
             padding: '10px 30px'
+            /* style="-webkit-text-security: square; */
         }}
         id="exampleInputPassword1" 
         placeholder="Password" 
@@ -204,16 +224,31 @@ render() {
         {/* <div class="mb-3 form-check"> */}
         <Row style={{width:'100%', marginBottom:'10%'}}>
         <Col>
-        <Form.Check type="checkbox" label="Remember me" />
+
+        <Form.Check 
+        type="checkbox" 
+        checked={this.state.rememberMe}
+        onChange={()=>this.setState({rememberMe:!this.state.rememberMe})} label="Remember me" 
+        />
+
         </Col>
         <Col style={{paddingRight:'0px'}}>
-        <Link to='/' style={{textDecoration:'none', float:'right', font: 'normal normal medium 18px/27px Poppins'}} >Forget Password?</Link>
+        <Link to='/' 
+        style={{
+            textDecoration:'none', 
+            float:'right', 
+            font: 'normal normal medium 18px/27px Poppins'
+            }} >Forget Password?</Link>
         </Col>
         </Row>
         {/* </div> */}
         <button 
         type="submit" 
-        style={{background:'#3E64E2', color:'#fff', borderRadius:'20px', font:"normal normal 600 23px/34px Poppins;"}} 
+        style={{
+            background:'#3E64E2', 
+            color:'#fff', 
+            borderRadius:'20px', 
+            font:"normal normal 600 23px/34px Poppins;"}} 
         className="btn col login-button"
         onClick={(e)=>this.handleSubmit(e)}
         >{
@@ -223,7 +258,11 @@ render() {
         
         <Row style={{marginTop:'10%'}}>
         <Col style={{ textAlign:'center'}}>
-        <Link to='/' style={{paddingtop:'40px',textDecoration:'none',font: 'normal normal medium 18px/27px Poppins'}} >Or Signup with email</Link>
+        <Link to='/' 
+        style={{
+            paddingtop:'40px',
+            textDecoration:'none',
+            font: 'normal normal medium 18px/27px Poppins'}} >Or Signup with email</Link>
         </Col>
         </Row>
         
